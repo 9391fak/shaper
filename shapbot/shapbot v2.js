@@ -255,7 +255,7 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
       } else {
         replier.reply("인증코드가 틀렸습니다! 다시 시도해 주세요!");
       }
-
+      //테스트 
     }
     if (msg.startsWith("이발 ")) {
       if (admin[sender] == imageDB.getProfileSHA()) {
