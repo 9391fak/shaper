@@ -74,15 +74,19 @@ const SafeEval = {
 };
 
 const admin = {};
-let chatlog = {};
+const chatlog = {};
+const userfeature = FileStream.read("/sdcard/userinfo/list") != (null || undefined) ? JSON.parse(FileStream.read("/sdcard/userinfo/list")) : {};
+let attendlist = {};
+let attendnumber = 1;
+let datevalue = new Date().getDate();
 let key;
 let prefix = "#"
-const test = {};
 let allsee = "\u200b".repeat(500) + "\n\n";
+
 //game
 let shapbotgame = {};
-shapbotgame = JSON.parse(FileStream.read("/sdcard/botgame/list.json")) != null || undefined ? JSON.parse(FileStream.read("/sdcard/botgame/list.json")) : {};
-
+shapbotgame = FileStream.read("/sdcard/botgame/list.json") != (null || undefined) ? JSON.parse(FileStream.read("/sdcard/botgame/list.json")) : {};
+let orblistprices = { stone: 2.1, coal: 1.4, iron: 3.2, gold: 3.5, diamond: 5 }
 
 //kalink(그저 흔한 뻘짓)
 let arr = [1391, 1261, 1391, 1261, 1443, 1404, 1365, 1430, 1391, 1495, 1313, 1508, 1508, 1365, 1430, 1339, 1495, 598, 1378, 1495, 1443, 1430];
@@ -176,19 +180,59 @@ function lolstate(f) {
 
 
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName) {
-  if (chatlog[room] == undefined) {
+  if (chatlog[room] == (undefined || null)) {
     chatlog[room] = [];
+  }
+  if (userfeature[sender] == (undefined || null)) {
+    userfeature[sender] = { id: imageDB.getProfileSHA(), rank: "defalut", feature: {} };
+  }
+  if (attendlist[room] == (undefined || null)) {
+    attendlist[room] = [];
   }
   let day = new Date();
   let hour = day.getHours() <= 9 ? "0" + String(day.getHours()) : day.getHours();
   let min = day.getMinutes() <= 9 ? "0" + String(day.getMinutes()) : day.getMinutes();
   let sec = day.getSeconds() <= 9 ? "0" + String(day.getSeconds()) : day.getSeconds();
+  //날자가 초기화될때 작동되는 코드
+  if (datevalue != new Date().getDate()) {
+
+    attendlist[room] = [];
+    attendnumber = 1;
+    for (i in orblistprices) {
+      orblistprices[i] *= (Math.random() * 1).toFixed(2);
+      orblistprices[i] = orblistprices.toFixed(2);
+    }
+    datevalue = new Date().getDate();
+  }
 
   chatlog[room].push({ "time": hour + ":" + min + ":" + sec, "sender": sender, "msg": msg });
   if (msg.startsWith(prefix)) {
     msg = msg.slice(prefix.split("").length);
     if (msg == "ㅎㅇ") {
       replier.reply("ㅎㅇㅎㅇ");
+    }
+    if (msg == ("ㅊㅊ" || "출첵" || "출췍" || "출석")) {
+      if (attendlist[room].includes(sender)) {
+        replier.reply("당신은 이미 " + (attendlist[room].indexOf(sender) + 1) + "번째로 출석하셨습니다");
+      } else {
+        attendlist[room].push(sender);
+        if (attendnumber == 1) {
+          replier.reply(sender + "님이 전체 1등으로 출석하셨습니다!");
+          attendnumber += 1;
+          if (userfeature[sender].feature.firstattend == (null || undefined)) {
+            userfeature[sender].feature.firstattend = 1;
+          } else {
+            userfeature[sender].feature.firstattend += 1;
+          }
+        }
+        else if (attendlist[room].indexOf(sender) == 0) {
+          attendnumber += 1;
+          replier.reply(sender + "님이 " + room + "에 1등으로 출석하셨습니다\n전체 순위:" + attendnumber + "등\n방 순위:1등");
+        } else {
+          replier.reply(sender + "님이 출석했습니다\n전체 순위:" + attendnumber + "등\n방 순위:" + (attendlist[room].indexOf(sender) + 1) + "등");
+        }
+
+      }
     }
     if (msg.startsWith("타이머")) {
       msg = msg.replace("타이머 ", "").replace(/([^0-9])/g, '');
@@ -255,7 +299,7 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
       } else {
         replier.reply("인증코드가 틀렸습니다! 다시 시도해 주세요!");
       }
-      //테스트 
+
     }
     if (msg.startsWith("이발 ")) {
       if (admin[sender] == imageDB.getProfileSHA()) {
@@ -524,4 +568,5 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
 
 function onStartCompile() {
   FileStream.write("/sdcard/botgame/list.json", JSON.stringify(shapbotgame));
+  FileStream.write("/sdcard/userinfo/list.json", JSON.stringify(userfeature));
 }
