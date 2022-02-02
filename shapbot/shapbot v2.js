@@ -223,6 +223,7 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
             userfeature[sender].feature.firstattend = 1;
           } else {
             userfeature[sender].feature.firstattend += 1;
+            attendnumber += 1;
           }
         }
         else if (attendlist[room].indexOf(sender) == 0) {
