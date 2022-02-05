@@ -75,7 +75,7 @@ const SafeEval = {
 
 const admin = {};
 const chatlog = {};
-const userfeature = FileStream.read("/sdcard/userinfo/list")!=(null||undefined) ? JSON.parse(FileStream.read("/sdcard/userinfo/list")):{};
+const userfeature = FileStream.read("/sdcard/userinfo/list") != (null || undefined) ? JSON.parse(FileStream.read("/sdcard/userinfo/list")) : {};
 let attendlist = {};
 let attendnumber = 1;
 let datevalue = new Date().getDate();
@@ -86,7 +86,7 @@ let allsee = "\u200b".repeat(500) + "\n\n";
 //game
 let shapbotgame = {};
 shapbotgame = FileStream.read("/sdcard/botgame/list.json") != (null || undefined) ? JSON.parse(FileStream.read("/sdcard/botgame/list.json")) : {};
-let orblistprices={stone:2.1,coal:1.4,iron:3.2,gold:3.5,diamond:5}
+let orblistprices = { stone: 2.1, coal: 1.4, iron: 3.2, gold: 3.5, diamond: 5 }
 
 //kalink(그저 흔한 뻘짓)
 let arr = [1391, 1261, 1391, 1261, 1443, 1404, 1365, 1430, 1391, 1495, 1313, 1508, 1508, 1365, 1430, 1339, 1495, 598, 1378, 1495, 1443, 1430];
@@ -102,6 +102,18 @@ const Kakao = new KakaoLinkClient(kalink["key"], 'https://youtube.com');
 Kakao.login(kalink["mail"], kalink["password"]);
 
 function timeForToday(value) {
+
+  let value2 = String(value);
+  if (value2.split("").length < 13) {
+    while (value2.split("").length < 13) {
+      value2 += "0";
+      if (value2.split("").length == 13) {
+        value = Number(value2);
+        break;
+      }
+    }
+  }
+
   const today = new Date();
   const timeValue = new Date(value);
 
@@ -153,16 +165,16 @@ function lolstate(f) {
   for (let i = 0; i < 20; i++) {
     result.push({});
     try {
-      result[i]["kda"] = data.select("div[class=GameItemWrap]").select(".Content").select(".KDA .KDA").get(i).text();
-      result[i]["champ"] = data.select("div[class=GameItemWrap]").select(".ChampionName").select("a[target=_blank]").get(i).text();
+      result[i]["kda"] = data.select("div[class=GameItemWrap]").select(".Content").select(".KDA .KDA").get(i).text().replace(/ /g, "");
+      result[i]["champ"] = data.select("div[class=GameItemWrap]").select(".ChampionName").select("a[target=_blank]").get(i).text().replace(/ & /g, "&");
       result[i]["champimg"] = data.select(".ChampionImage").select("a[href]").select("img[class=Image]").get(i).attr("src").toString().replace("//", "http://");
       result[i]["ratio"] = data.select(".KDARatio").select("span[class=KDARatio]").get(i).text() != null ? data.select(".KDARatio").select("span[class=KDARatio]").get(i).text() : "";
       result[i]["gametype"] = data.select(".GameType").get(i).text();
-      result[i]["gameago"] = data.select(".TimeStamp").get(i).text();
-      result[i]["gameresult"] = data.select(".GameResult").get(i).text();
-      result[i]["gamelength"] = data.select(".GameLength").get(i).text();
+      result[i]["gameago"] = timeForToday(data.select(".TimeStamp").get(i).select("span[class= _timeago _timeCount]").attr("data-datetime").toString());
+      result[i]["gameresult"] = data.select(".GameResult").get(i).text().replace("Victory", "승리").replace("Defeat", "패배");
+      result[i]["gamelength"] = data.select(".GameLength").get(i).text().replace(/s/g, "초").replace(/m/g, "분");
       result[i]["cs"] = data.select(".GameItemWrap").not(".Stats > .CS > span").select(".Stats > .CS").get(i).text();
-      result[i]["lvl"] = data.select(".Stats").select(".Level").get(i).text();
+      result[i]["lvl"] = data.select(".Stats").select(".Level").get(i).text().replace(/Level/g, "레벨 ");
       result[i]["ckrate"] = data.select(".Stats").select(".CKRate").get(i).text().replace("P/Kill ", "");
       if (data.select(".Content > .KDA").not(".KDA > span").get(i).select(".MultiKill") != null) {
         result[i]["multikill"] = data.select(".Content > .KDA").not(".KDA > span").get(i).select(".MultiKill").text();
@@ -180,13 +192,13 @@ function lolstate(f) {
 
 
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName) {
-  if (chatlog[room] == (undefined||null)) {
+  if (chatlog[room] == (undefined || null)) {
     chatlog[room] = [];
   }
-  if (userfeature[sender] == (undefined||null)){
-    userfeature[sender] = {id:imageDB.getProfileSHA(),rank:"defalut",feature:{}};
+  if (userfeature[sender] == (undefined || null)) {
+    userfeature[sender] = { id: imageDB.getProfileSHA(), rank: "defalut", feature: {} };
   }
-  if (attendlist[room] == (undefined||null)){
+  if (attendlist[room] == (undefined || null)) {
     attendlist[room] = [];
   }
   let day = new Date();
@@ -194,15 +206,15 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
   let min = day.getMinutes() <= 9 ? "0" + String(day.getMinutes()) : day.getMinutes();
   let sec = day.getSeconds() <= 9 ? "0" + String(day.getSeconds()) : day.getSeconds();
   //날자가 초기화될때 작동되는 코드
-  if(datevalue!=new Date().getDate()){
-    
-    attendlist[room]=[];
-    attendnumber=1;
-    for(i in orblistprices){
-      orblistprices[i]*=(Math.random()*1).toFixed(2);
-      orblistprices[i]=orblistprices[i].toFixed(2);
+  if (datevalue != new Date().getDate()) {
+
+    attendlist[room] = [];
+    attendnumber = 1;
+    for (i in orblistprices) {
+      orblistprices[i] *= (Math.random() * 1).toFixed(2);
+      orblistprices[i] = orblistprices[i].toFixed(2);
     }
-    datevalue=new Date().getDate();
+    datevalue = new Date().getDate();
   }
 
   chatlog[room].push({ "time": hour + ":" + min + ":" + sec, "sender": sender, "msg": msg });
@@ -211,28 +223,28 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
     if (msg == "ㅎㅇ") {
       replier.reply("ㅎㅇㅎㅇ");
     }
-    if(msg==("ㅊㅊ"||"출첵"||"출췍"||"출석")){
-      if(attendlist[room].includes(sender)){
-        replier.reply("당신은 이미 "+(attendlist[room].indexOf(sender)+1)+"번째로 출석하셨습니다");
-      }else{
+    if (msg == ("ㅊㅊ" || "출첵" || "출췍" || "출석")) {
+      if (attendlist[room].includes(sender)) {
+        replier.reply("당신은 이미 " + (attendlist[room].indexOf(sender) + 1) + "번째로 출석하셨습니다");
+      } else {
         attendlist[room].push(sender);
-        if(attendnumber==1){
-          replier.reply(sender+"님이 전체 1등으로 출석하셨습니다!");
-          attendnumber+=1;
-          if(userfeature[sender].feature.firstattend == (null||undefined)){
+        if (attendnumber == 1) {
+          replier.reply(sender + "님이 전체 1등으로 출석하셨습니다!");
+          attendnumber += 1;
+          if (userfeature[sender].feature.firstattend == (null || undefined)) {
             userfeature[sender].feature.firstattend = 1;
-          }else{
+          } else {
             userfeature[sender].feature.firstattend += 1;
           }
         }
-        else if(attendlist[room].indexOf(sender)==0){
-          attendnumber+=1;
-          replier.reply(sender+"님이 "+room+"에 1등으로 출석하셨습니다\n전체 순위:"+attendnumber+"등\n방 순위:1등");
-        }else{
-          replier.reply(sender+"님이 출석했습니다\n전체 순위:"+attendnumber+"등\n방 순위:"+(attendlist[room].indexOf(sender)+1)+"등");
-          attendnumber+=1;
+        else if (attendlist[room].indexOf(sender) == 0) {
+          attendnumber += 1;
+          replier.reply(sender + "님이 " + room + "에 1등으로 출석하셨습니다\n전체 순위:" + attendnumber + "등\n방 순위:1등");
+        } else {
+          replier.reply(sender + "님이 출석했습니다\n전체 순위:" + attendnumber + "등\n방 순위:" + (attendlist[room].indexOf(sender) + 1) + "등");
+          attendnumber += 1;
         }
-        
+
       }
     }
     if (msg.startsWith("타이머")) {
@@ -300,7 +312,7 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
       } else {
         replier.reply("인증코드가 틀렸습니다! 다시 시도해 주세요!");
       }
-      
+
     }
     if (msg.startsWith("이발 ")) {
       if (admin[sender] == imageDB.getProfileSHA()) {
@@ -322,20 +334,20 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
       let third = msg.replace("커시 ", "").split(",")[2];
       replier.reply("[ " + hour + ":" + min + " ]" + allsee + tdc(first, second, Number(third)));
     }
-    if (msg=="돈받기"){
-      if (shapbotgame[sender] == (null||undefined)){
+    if (msg == "돈받기") {
+      if (shapbotgame[sender] == (null || undefined)) {
         replier.reply("광질,벌목,도박 중 한번만 하고 쳐주세요");
-      }else{
-        if(shapbotgame[sender].money <= 0){
+      } else {
+        if (shapbotgame[sender].money <= 0) {
           shapbotgame[sender].money += 1000;
           replier.reply("[!] 1000원이 지급되었습니다");
-        }else{
-          replier.reply ("[!] 이미 돈이 많습니다");
-         }
+        } else {
+          replier.reply("[!] 이미 돈이 많습니다");
+        }
       }
     }
     if (msg.startsWith("도박 ")) {
-      if (shapbotgame[sender] ==(null || undefined)) {
+      if (shapbotgame[sender] == (null || undefined)) {
         replier.reply("[!] 신규 유저이므로 자동으로 회원가입 되셨습니다");
         shapbotgame[sender] = { minepam: { mineral: { wood: 0, stone: 0, coal: 0, iron: 0, gold: 0, diamond: 0 }, item: { pickaxe: "wooden" } }, exp: 0, level: 0, money: 1000, id: imageDB.getProfileSHA() }; //나무,조약돌,석탄,철,금,다이아      
       } else {
@@ -358,8 +370,8 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
                 let random = Number(((Math.random()) * 2).toFixed(2));
                 let finalmoney = (Math.floor(setmoney * random));
                 shapbotgame[sender].money -= finalmoney;
-                if(shapbotgame[sender].money < 0){
-                  shapbotgame[sender].money=0;
+                if (shapbotgame[sender].money < 0) {
+                  shapbotgame[sender].money = 0;
                 }
                 replier.reply("🎰도박 결과🎰\n\n기본 잔액: " + (shapbotgame[sender].money + finalmoney) + "\n현재 잔액: " + (shapbotgame[sender].money) + "\n\n손해 : " + finalmoney + " (약 " + random + ")\n실행한 사람: " + sender);
               }
@@ -371,7 +383,7 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
       }
     }
     if (msg.startsWith("벌목" || "나무캐기" || "나무")) {
-      if (shapbotgame[sender] == (null||undefined)) {
+      if (shapbotgame[sender] == (null || undefined)) {
         replier.reply("[!] 신규 유저이므로 자동으로 회원가입 되셨습니다");
         shapbotgame[sender] = { minepam: { mineral: { wood: 0, stone: 0, coal: 0, iron: 0, gold: 0, diamond: 0 }, item: { pickaxe: "wooden" } }, exp: 0, level: 0, money: 1000, id: imageDB.getProfileSHA() }; //나무,조약돌,석탄,철,금,다이아      
       } else {
